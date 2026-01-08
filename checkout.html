@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Checkout</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<style>
+body{font-family:Arial;background:#f5f5f5;padding:20px}
+.box{background:white;padding:15px;border-radius:8px;margin-bottom:15px}
+input,textarea{width:100%;padding:10px;margin:5px 0}
+button{background:green;color:white;padding:12px;width:100%;border:none;cursor:pointer}
+.cart-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:8px 0;
+}
+.remove{
+  background:red;
+  color:white;
+  border:none;
+  padding:5px 8px;
+  border-radius:4px;
+  cursor:pointer;
+  box-sizing: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Checkout</h2>
+
+<div class="box">
+<h3>Delivery Details</h3>
+<input id="name" placeholder="Full Name">
+<input id="phone" placeholder="Phone Number">
+<input id="city" placeholder="City">
+<textarea id="address" placeholder="Delivery Address"></textarea>
+</div>
+
+<div class="box">
+<h3>Order Summary</h3>
+<div id="items"></div>
+<p><b>Total: ₦<span id="total">0</span></b></p>
+</div>
+
+<button onclick="checkout()">Place Order via WhatsApp</button>
+
+<script>
+// 🔐 REQUIRE LOGIN
+if(!localStorage.getItem("loggedUser")){
+  alert("Please sign up or login to continue");
+  window.location="signup.html";
+}
+
+// CART LOGIC
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+const itemsBox = document.getElementById("items");
+
+function renderCart(){
+  let total = 0;
+  itemsBox.innerHTML = "";
+
+  if(cart.length === 0){
+    itemsBox.innerHTML = "<p>Your cart is empty</p>";
+    document.getElementById("total").innerText = "0";
+    return;
+  }
+
+  cart.forEach((i,index)=>{
+    total += i.price * i.qty;
+    itemsBox.innerHTML += `
+      <div class="cart-item">
+        <span>${i.item} × ${i.qty}</span>
+        <button class="remove" onclick="removeItem(${index})">Remove</button>
+      </div>
+    `;
+  });
+
+  document.getElementById("total").innerText = total.toLocaleString();
+}
+
+function removeItem(index){
+  cart.splice(index,1);
+  localStorage.setItem("cart",JSON.stringify(cart));
+  renderCart();
+}
+
+// WHATSAPP CHECKOUT
+function checkout(){
+  if(!cart.length) return alert("Cart empty");
+
+  const n=name.value,p=phone.value,c=city.value,a=address.value;
+  if(!n||!p||!c||!a) return alert("Fill all fields");
+
+  let total = cart.reduce((t,i)=>t+i.price*i.qty,0);
+
+  let msg=`Order:%0AName:${n}%0APhone:${p}%0ACity:${c}%0AAddress:${a}%0A%0A`;
+  cart.forEach(i=>msg+=`- ${i.item} x${i.qty}%0A`);
+  msg+=`Total: ₦${total.toLocaleString()}`;
+
+  window.open("https://wa.me/2349130084673?text="+msg);
+}
+
+renderCart();
+</script>
+
+</body>
+</html>

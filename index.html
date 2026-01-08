@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LuxuryMart | Shop</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body { margin:0;font-family:Arial;background:#f5f5f5;padding-bottom:90px }
+header { background:#ff9900;color:white;padding:15px;text-align:center }
+
+.search-box { padding:10px;background:white }
+.search-box input { width:100%;padding:10px }
+
+.products {
+  padding:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:20px;
+}
+.product {
+  background:white;padding:15px;border-radius:8px;
+  box-shadow:0 0 10px rgba(0,0,0,.1);text-align:center
+}
+.product img { width:100%;height:180px;object-fit:cover;border-radius:6px }
+.product button {
+  background:#ff9900;border:none;color:white;
+  padding:10px;width:100%;margin-top:10px;cursor:pointer
+}
+
+/* ===== BOTTOM NAV ===== */
+nav {
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:#fff;
+  display:flex;
+  justify-content:space-around;
+  padding:10px 0;
+  box-shadow:0 -4px 15px rgba(0,0,0,.25);
+  z-index:1000;
+}
+
+nav button {
+  border:none;
+  padding:10px 14px;
+  border-radius:25px;
+  font-weight:bold;
+  cursor:pointer;
+  color:white;
+  transition:.3s;
+}
+
+nav button:hover {
+  transform:translateY(-4px) scale(1.05);
+}
+
+nav button:active {
+  transform:scale(.95);
+}
+
+nav button:nth-child(1){background:#ff6f61}
+nav button:nth-child(2){background:#4caf50}
+nav button:nth-child(3){background:#2196f3}
+nav button:nth-child(4){background:#9c27b0}
+nav button:nth-child(5){background:#ff9800}
+nav button:nth-child(6){background:#000}
+nav button:nth-child(7){background:#1976d2}
+
+.cart-nav{position:relative}
+.badge{
+  position:absolute;
+  top:-6px;
+  right:-6px;
+  background:red;
+  color:white;
+  font-size:11px;
+  padding:3px 6px;
+  border-radius:50%;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h2>LuxuryMart</h2>
+  <a id="signupLink" href="signup.html"
+     style="color:white;font-weight:bold;display:none">
+     Sign Up
+  </a>
+
+</header>
+
+<div class="search-box">
+  <input id="search" placeholder="Search products..." oninput="render()">
+</div>
+
+<div id="products" class="products"></div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav>
+  <button onclick="setCat('clothes')">Clothes</button>
+  <button onclick="setCat('phones')">Phones</button>
+  <button onclick="setCat('electronics')">Electronics</button>
+  <button onclick="setCat('jewelry')">Jewelry</button>
+  <button onclick="setCat('shoes')">Shoes</button>
+
+  <button class="cart-nav" onclick="goCheckout()">
+    Cart <span id="cartCount" class="badge">0</span>
+  </button>
+
+  <button onclick="openDash()">Dashboard</button>
+</nav>
+
+<script>
+let loggedUser = localStorage.getItem("loggedUser");
+
+if(!loggedUser){
+  document.getElementById("signupLink").style.display = "inline";
+}
+
+
+let cat="clothes";
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
+
+/* ===== YOUR DATA OBJECT (UNCHANGED) ===== */
+const data={
+clothes:[
+{name:"Slim Jeans",price:12000,img:"https://tse4.mm.bing.net/th/id/OIP.zoctzXW-VVQNT7QBOY82fAHaJ4?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Relaxed Fit Jeans",price:11000,img:"https://tse3.mm.bing.net/th/id/OIP.ifQ_R7C3GzJ9I_tB557yfAHaJ4?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Skinny Jeans",price:13000,img:"https://tse4.mm.bing.net/th/id/OIP.WW9JcoQv_hx2cPTLcdlcZQHaJ3?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Straight Leg Jeans",price:12500,img:"https://th.bing.com/th/id/R.e6f80f8ecc0fc3004d906c4713884458?rik=FB2l%2b7XxNZj9Aw&pid=ImgRaw&r=0"},
+{name:"Ripped Jeans",price:14000,img:"https://tse1.mm.bing.net/th/id/OIP.qhfzFAFv30Itinq4xCN16AHaJ4?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Denim Jacket",price:15000,img:"https://tse2.mm.bing.net/th/id/OIP.PW82Adtl5LFjFM-H1GYYVAHaJ4?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Casual Tee",price:4000,img:"https://tse1.mm.bing.net/th/id/OIP.5Sb3OJztZQ_j9ECv_Y2G5gHaHa?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Graphic Tee",price:5000,img:"https://tse3.mm.bing.net/th/id/OIP.eHwcsGT0Xnqxuhyut-i1wgHaJ3?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Polo Shirt",price:6500,img:"https://th.bing.com/th/id/R.a8f30a5ef7b1cfb7af1c18a84b32777d?rik=kcAi8mrIEIoL2w&pid=ImgRaw&r=0"},
+{name:"Button-Down Shirt",price:8000,img:"https://i5.walmartimages.com/seo/Chaps-Men-s-Short-Sleeve-Nautical-Easy-Care-Button-Up-Shirt_53465128-b3b6-4886-a66a-f47a853ee954.f33b4e4a45363d4944e8a39dbaf8cbc2.jpeg"},
+{name:"Casual Shirt",price:7500,img:"https://i.pinimg.com/736x/99/e3/09/99e309793d0c82bf60ff716f140c4dfb.jpg"},
+{name:"Flannel Shirt",price:9000,img:"https://tse3.mm.bing.net/th/id/OIP.iFZU-RTx-FQZxXze3DSnDgHaJ4?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Hoodie",price:9500,img:"https://tse2.mm.bing.net/th/id/OIP.RNQU8HnkMvyututlYYa1QgHaHa?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Zip-Up Hoodie",price:10500,img:"https://tse4.mm.bing.net/th/id/OIP.mCuusjGckCBFYgsLxxcIQwHaJ4?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Crewneck Sweatshirt",price:8500,img:"https://tse1.mm.bing.net/th/id/OIP.olNQkFH65xqAwNvZ1r0pFQHaJ4?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Cardigan",price:11000,img:"https://tse4.mm.bing.net/th/id/OIP.XBMh23iroaKOYO94nJTykAHaLG?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Lightweight Jacket",price:13000,img:"https://content.backcountry.com/images/items/large/PRA/PRA00TR/CH.jpg"},
+{name:"Bomber Jacket",price:18000,img:"https://tse4.mm.bing.net/th/id/OIP.apHxVf18B1unETYjFrpx8AHaHa?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Leather Jacket",price:42000,img:"https://th.bing.com/th/id/R.e0a84d55c0cff58ae4acd79155f7bce2?rik=fLIl4dD4FaNrSQ&pid=ImgRaw&r=0s"},
+{name:"Trench Coat",price:30000,img:"https://tse1.explicit.bing.net/th/id/OIP.ia1EfDTEo0AIx-vDhu3WJgHaLG?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Wool Overcoat",price:45000,img:"https://th.bing.com/th/id/R.18d10fccb08471d5d8b87841e2a460d1?rik=52sM8pOADiE3aQ&pid=ImgRaw&r=0"},
+{name:"Casual Blazer",price:22000,img:"https://tse1.mm.bing.net/th/id/OIP.Z2IrrwL2lfpA8QyGy8ExnAHaKO?rs=1&pid=ImgDetMain&o=7&rm=3"},
+{name:"Tailored Blazer",price:35000,img:"https://tse3.mm.bing.net/th/id/OIP.3E9UWW0hFm7vDzifuzfR_QHaNK?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Chinos",price:9000,img:"https://tse1.mm.bing.net/th/id/OIP.EyjH2aw-9qx_HY2HkOzA-QHaFE?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Cargo Pants",price:9500,img:"https://tse3.mm.bing.net/th/id/OIP.GhpnUjezhM1uRUPW7zD0HQHaQb?rs=1&pid=ImgDetMain&o=7&rm=3"},
+{name:"Jogger Pants",price:15000,img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQR9JW2fVZ6G7Sd5vbOVsQ7i7YFGIwIT5zWfg&s"},
+{name:"Sweatpants",price:7000,img:"https://ng.jumia.is/unsafe/fit-in/500x500/filters:fill(white)/product/60/9675814/1.jpg?7500"},
+{name:"Casual Shorts",price:6000,img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRDMwiesAiyd0HzmwsRFPOLHixt1eeTiOKlag&s"},
+{name:"Denim Shorts",price:7500,img:"https://wisemanswestern.com/cdn/shop/files/DSC09841.heic?v=1712157748&width=1946"},
+{name:"Athletic Shorts",price:5000,img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWpzqZRkzFODDt34PCO6sK7piPD1sWfBnFMQ&s"},
+{name:"Summer Dress",price:12000,img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOSF0brDVQyslip1wDdbJL_us820pKFGNNzw&s"},
+{name:"Maxi Dress",price:18000,img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYSGGjeE1nKs3FYHwKUVn5BdrH1uOeY8SvPA&s"},
+{name:" Black Midi Dress",price:15000,img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfWYbHskToxkZHw5A8c1Gxj9gG7JlozMkdIA&s"},
+{name:"Shirt Dress",price:13000,img:"https://i.pinimg.com/originals/b4/3a/85/b43a8576a0930115bff34f0b94712b1b.jpg"},
+{name:"Mini Dress",price:14000,img:"https://sp.yimg.com/ib/th?id=OPHS.ItsJpuk4PkuKag474C474&o=5&pid=21.1&w=174&h=174&p=0"},
+{name:"Sweater Dress",price:16000,img:"https://tse3.mm.bing.net/th/id/OIP.8rKUDC2oAZ6GCuj9rLFhQQHaJ4?pid=Api&h=220&P=0&w=220"},
+],
+phones:[
+{name:"iPhone 13",price:450000,img:"https://www.apple.com/newsroom/images/product/iphone/geo/Apple_iphone13_hero_geo_09142021_inline.jpg.large.jpg"},
+{name:"Infinix Hot 12",price:90000,img:"https://www.celgusa.com/wp-content/uploads/2023/01/INFINIX-HOT-12-PLAY-01-scaled.jpg"},
+{name:"Itel S16",price:40000,img:"https://mobility.com.ng/wp-content/uploads/2020/12/itel-S16-Pro-dark-purple.jpg"},
+{name:"Tecno Spark 8",price:85000,img:"https://fdn2.gsmarena.com/vv/pics/tecno/tecno-spark-8-1.jpg"},
+{name:"Samsung S22",price:380000,img:"https://images.samsung.com/is/image/samsung/p6pim/sg/2202/gallery/sg-galaxy-s22-s901-409996-sm-s901eidgxsp-530867137?$650_519_PNG$"},
+{name:"Tecno Camon 40 pro",price:150000,img:"https://www.dxomark.com/wp-content/uploads/medias/post-183555/Tecno-Camon-40-Pro-5G_featured-image-packshot-review.jpg"},
+{name:"iphone 16 pro max",price:1363000,img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR377yEiYUw28UUIxaygwbx0jfQiYUL5-s3IQ&s"},
+{name:"Samsung Galaxy Z Fold 5",price:2500000,img:"https://m.media-amazon.com/images/I/61A1RYHuSHL.jpg"},
+{name:"Google Pixel 7 Pro 128 GB",price:1200000,img:"https://pisces.bbystatic.com/image2/BestBuy_US/images/products/6519/6519930_sd.jpg"},
+{name:"OnePlus 11 256 GB",price:1400000,img:"https://cdnjs.angroos.com/wp-content/uploads/2023/11/OnePlus-11-5G-Titan-Black-8GB-RAM-128GB-Storage-56999-450x450.jpg"},
+{name:"Samsung Galaxy S23 Ultra",price:1800000,img:"https://tse3.mm.bing.net/th/id/OIP.P5yxIK8RgogqDE50sF0tAwHaHT?w=1070&h=1055&rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Xiaomi Mi 13 Pro",price:160000,img:"https://tse3.mm.bing.net/th/id/OIP.M5LVOxEQhltHRau46uGFZgHaHa?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Sony Xperia 1 IV",price:259000,img:"https://fdn.gsmarena.com/imgroot/news/23/05/sony-xperia-1-v-official/inline/-1200/gsmarena_004.jpg"},
+{name:"Nokia X10",price:110000,img:"https://tse3.mm.bing.net/th/id/OIP.j3-D6fTGPnBmbCybrkv1rwHaHx?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Motorola Edge 30 ultra",price:130000,img:"https://www.thenextdroid.com/wp-content/uploads/2022/09/Motorola-Edge-30-Ultra.jpg"},
+{name:"Infinix Note 12",price:85000,img:"https://www.techspecs.info/uploads/Infinix_Note_50_Pro_5_G_139ddea3f5.png"},
+{name:"iPhone 14",price:650000,img:"https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-14-select-2022?wid=940&hei=1112&fmt=png-alpha&.v=1660740686410"},
+{name:"iPhone 14 Pro",price:950000,img:"https://www.apple.com/newsroom/images/product/iphone/standard/Apple_iPhone-14-Pro_and_14-Pro-Max_hero_09142022.jpg"},
+{name:"iPhone SE (2022)",price:200000,img:"https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-se-select-2022?wid=940&hei=1112&fmt=png-alpha&.v=1645036276000"},
+{name:"Google Pixel 8",price:1400000,img:"https://store.google.com/product-images/intro/pixel_8.png"},
+{name:"Google Pixel 6a",price:220000,img:"https://store.google.com/product-images/intro/pixel_6a.png"},
+{name:"OnePlus Nord 3",price:350000,img:"https://image01.oneplus.net/ebp/202307/24/1-m00-12-2a-rb8bwl6l9jaafl7yaaackoa1o7162.png"},
+{name:"Xiaomi Redmi Note 12",price:120000,img:"https://i01.appmifile.com/webfile/globalimg/products/pc/redmi-note-12-series/specs.png"},
+{name:"Realme 11 Pro",price:125000,img:"https://image01.realme.net/general/20230517/1684322330.jpg"},
+{name:"Oppo Reno9",price:210000,img:"https://image.oppo.com/content/dam/oppo/common/mkt/v2-2/reno/reno9-pro-5g/black.png"},
+{name:"Vivo Y100",price:110000,img:"https://www.vivo.com/static/img/y100/overview.png"},
+{name:"Tecno Pova 5",price:95000,img:"https://www.tecno-mobile.com/media/wysiwyg/Pova5.png"},
+{name:"Itel P40",price:45000,img:"https://www.itel-mobile.com/storage/product/2022/11/25/p40-1.png"},
+{name:"Asus ROG Phone 6",price:320000,img:"https://dlcdnwebimgs.asus.com/gain/8D8F0E5D-8A5D-4A6D-9B2C-F9A8E9B6A123/w646"},
+{name:"Lenovo Legion Phone Duel 2",price:420000,img:"https://www.lenovo.com/medias/lenovo-legion-phone-duel-2.png?context=bWFzdGVyfHJvb3R8MTE1MjI2fGltYWdlL3BuZ3xoOTgvaDk5LzE0NjYwOTgyNTQzODI0LnBuZ3w0Mzk4ODQwZDQ5OTczNmI0Y2ViZjkwNTJlMzA0ZjI5YjU2YjIxZjkxYWIwNGE4NjNiMTMxYTg1ZGYyMzg5YTNl"},
+{name:"Honor Magic5",price:390000,img:"https://www.hihonor.com/static/img/magic5.png"},
+{name:"Huawei P50 Pro",price:750000,img:"https://consumer.huawei.com/content/dam/huawei-cbg-site/common/mkt/pdp/phones/p50-pro/img/p50-pro-white.png"},
+{name:"Fairphone 4",price:280000,img:"https://www.fairphone.com/wp-content/uploads/2021/09/fairphone-4-visual.png"}
+],
+electronics:[
+{name:"hp elite book 870 G7",price:500000,img:"https://www.thrillhouse.com.ng/wp-content/uploads/2024/11/615Dp08vcKL._AC_SL1500_.jpg"},
+{name:"LG 60-inch 4K UHD Smart TV",price:800000,img:"https://images-cdn.ubuy.co.in/654405fdaf81ee55d67a3a68-lg-60-class-4k-uhd-2160p-led-smart-tv.jpg"},
+{name:"JBL Boombox",price:73000,img:"https://i5.walmartimages.com/seo/JBL-Boombox-3-Portable-Bluetooth-Speaker-IPX7-Waterproof-Upto-24-Hours-of-Playtime-Black-Damaged-Box-JBLBOOMBOX3BLKAM_f6d51048-f6c0-4db8-86a3-114aef8546c6.cd74db1e11de7d087569b25103b8fa57.jpeg"},
+{name:"Sony WH-1000XM4",price:250000,img:"https://m.media-amazon.com/images/I/71o8Q5XJS5L._AC_SL1500_.jpg"},
+{name:"Apple MacBook Pro",price:1200000,img:"https://nigerianprice.com/wp-content/uploads/2018/02/apple-laptop-prices-in-nigeria.png"},
+{name:"Nexus Refridgerator",price:400000,img:"https://www.nexusappliances.com.ng/wp-content/uploads/2020/10/NX-580-Inox.png"},
+{name:"Canon EOS 1500D",price:300000,img:"https://www.camerahouse.com.au/media/catalog/product/6/1/61_k432_design_no_is.jpg?quality=80&fit=bounds&height=&width=800&canvas=800:800"},
+
+// 30 additional electronics items
+{name:"Apple iPad Pro 11",price:450000,img:"https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-pro-11-select-202104?wid=940&hei=1112&fmt=png-alpha&.v=1617126610000"},
+{name:"Samsung Galaxy Tab S8",price:300000,img:"https://images.samsung.com/is/image/samsung/p6pim/levant/2302/gallery/levant-galaxy-tab-s8-sm-x700nzkdmea-530741493?$684_547_PNG$"},
+{name:"Amazon Echo Dot (5th Gen)",price:25000,img:"https://images-na.ssl-images-amazon.com/images/I/61IxWv3ecpL._AC_SL1000_.jpg"},
+{name:"Google Nest Hub (2nd Gen)",price:30000,img:"https://store.google.com/product-images/intro/nest_hub.jpg"},
+{name:"Sony PlayStation 5",price:320000,img:"https://www.sony.com/image/ps5-product.png"},
+{name:"Xbox Series X",price:300000,img:"https://compass-ssl.xbox.com/assets/ab/xx/seriesx-image.png"},
+{name:"Nintendo Switch OLED",price:220000,img:"https://www.nintendo.com/content/dam/noa/en_US/hardware/switch/oled-model/gallery/switch-oled-model-gallery-01.jpg"},
+{name:"DJI Mini 2 Drone",price:180000,img:"https://cdn.dji.com/product/mini-2/mini-2-1.jpg"},
+{name:"GoPro HERO11",price:200000,img:"https://gopro.com/content/dam/gopro/en/product-photos/hero11-black/hero11-black-1.jpg"},
+{name:"Bose QuietComfort Earbuds",price:120000,img:"https://assets.bose.com/content/dam/common/martech/consumer_electronics/quietcomfort/earbuds/qc-earbuds/product_image_1.png"},
+{name:"Beats Studio3 Wireless",price:90000,img:"https://www.beatsbydre.com/content/dam/beats/global/collections/studio3/studio3-black.png"},
+{name:"Amazon Kindle Paperwhite",price:60000,img:"https://images-na.ssl-images-amazon.com/images/I/61f7F0i1cQL._AC_SL1000_.jpg"},
+{name:"Samsung T7 Portable SSD",price:40000,img:"https://images.samsung.com/is/image/samsung/p6pim/levant/portable-ssd-t7-mu-pc1t0k-001-001-000000-001.jpg"},
+{name:"WD My Passport 2TB",price:35000,img:"https://www.westerndigital.com/content/dam/wd-www/products/desktop-storage/my-passport/gallery/my-passport-2tb.png"},
+{name:"Epson EcoTank Printer",price:80000,img:"https://www.epson.co.za/expand/eu/epson/products/inkjet-printers/ecotank/ecotank-image.png"},
+{name:"Canon PIXMA Inkjet Printer",price:70000,img:"https://www.canon-europe.com/media/Pixma-promo.png"},
+{name:"Logitech MX Master 3 Mouse",price:30000,img:"https://resource.logitech.com/content/dam/logitech/en/products/mice/mx-master-3/gallery/mx-master-3-Graphite.png"},
+{name:"Razer BlackWidow Keyboard",price:40000,img:"https://assets2.razerzone.com/images products/blackwidow/blackwidow-v3.png"},
+{name:"Philips Hue Starter Kit",price:60000,img:"https://images.philips-hue.com/product/hue-starter-kit.png"},
+{name:"Ring Video Doorbell",price:70000,img:"https://cdn.ring.com/doorbell/ring-doorbell.png"},
+{name:"Anker PowerCore 20000",price:20000,img:"https://d2211byn0pk9fi.cloudfront.net/spree/products/attachments/000/000/001/original/anker-powercore.png"},
+{name:"Tile Mate Tracker",price:8000,img:"https://www.thetileapp.com/static/images/tile-mate.png"},
+{name:"Sonos One Speaker",price:220000,img:"https://www.sonos.com/content/dam/sonos/media/product/one/one-black.png"},
+{name:"NETGEAR Nighthawk Router",price:50000,img:"https://www.netgear.com/images/products/routers/nighthawk.png"},
+{name:"TP-Link Archer Router",price:25000,img:"https://static.tp-link.com/_images/product/archer.png"},
+{name:"Acer 27\" Monitor",price:90000,img:"https://static.acer.com/monitor/27-inch.png"},
+{name:"ASUS 27\" Gaming Monitor",price:110000,img:"https://dlcdnwebimgs.asus.com/gain/monitor-27.png"},
+{name:"Samsung 32\" Curved Monitor",price:120000,img:"https://images.samsung.com/monitor/32-curved.png"},
+{name:"Meta Quest 2 (Oculus)",price:180000,img:"https://images.meta.com/quest/quest2.png"},
+{name:"Fitbit Versa 3",price:70000,img:"https://static.fitbit.com/product/versa3.png"},
+],
+jewelry:[
+{name:"Gold Necklace",price:150000,img:"https://i.pinimg.com/originals/9e/d2/2d/9ed22d3eee7c650c94153f096e513e96.jpg"},
+{name:"Diamond Ring",price:500000,img:"https://jewelrydesigns.com/wp-content/uploads/ER1-Shop-Diamond-Engagement-Rings-1080X1080.jpg"},
+{name:"Iced out Bracelet",price:90000,img:"https://olertis.com/wp-content/uploads/2024/06/Jewelry-Services-Olertis-Iced-Out-Bracelet-1.webp"},
+{name:"cartier watch",price:500000,img:"https://tse1.mm.bing.net/th/id/OIP.6OqHF8Eu7TnLXrqu-xlbegHaHa?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"cartier",price:200000,img:"https://tse3.mm.bing.net/th/id/OIP.qlWz9VAhJgcZYnJypre94QHaE7?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"ROLEX watch",price:800000,img:"https://tse4.mm.bing.net/th/id/OIP.0hZdnNyilubIzuqnjb11GwHaFj?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"G-Shock watch",price:48000,img:"https://casiofanmag.com/wp-content/uploads/2015/08/GA-100B-7A-2.jpg"},
+{name:"G_Shock black&gold watch",price:50000,img:"https://cdn.shopify.com/s/files/1/1902/9663/products/GA110GB-1_1024x1024_3dd49366-deb6-4f8d-89f7-915fbdba4754_800x.jpg?v=1554154856"},
+{name:"Casio watch",price:200000,img:"https://tse3.mm.bing.net/th/id/OIP.OiJazgeneNL-GE781gYjbgHaJk?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Gold Earrings",price:120000,img:"https://th.bing.com/th/id/R.4d67290830f3aec44e220aa35f78478f?rik=6KRuDwLiQ6fntA&pid=ImgRaw&r=0"},
+{name:"Iced out cross Necklace",price:250000,img:"https://tse1.explicit.bing.net/th/id/OIP.h989ZppkXOIw8jGOsLyMPQHaHa?rs=1&pid=ImgDetMain&o=7&rm=320"},
+{name:"Iced out Cartier watch",price:750000,img:"https://tse3.mm.bing.net/th/id/OIP.hIiHFUxUwZgPNJwtndXcCQHaHa?rs=1&pid=ImgDetMain&o=7&rm=320"},
+
+],
+shoes:[
+{name:"Luxury Sneakers",price:90000,img:"https://images.unsplash.com/photo-1542291026"},
+{name:"Designer Heels",price:120000,img:"https://images.unsplash.com/photo-1583003609621"},
+{name:"Leather Loafers",price:110000,img:"https://images.unsplash.com/photo-1600180758890"}
+]
+};
+
+/* ===== FUNCTIONS ===== */
+function setCat(c){
+  cat=c;
+  render();
+}
+
+function render(){
+ const p=document.getElementById("products");
+ const s=document.getElementById("search").value.toLowerCase();
+ p.innerHTML="";
+ data[cat].filter(x=>x.name.toLowerCase().includes(s))
+ .forEach(x=>{
+ p.innerHTML+=`
+ <div class="product">
+   <img src="${x.img}">
+   <h4>${x.name}</h4>
+   <p>₦${x.price.toLocaleString()}</p>
+   <button onclick="add('${x.name}',${x.price})">Add to Cart</button>
+ </div>`;
+ });
+}
+
+function add(item,price){
+ let f=cart.find(c=>c.item===item);
+ f ? f.qty++ : cart.push({item,price,qty:1});
+ localStorage.setItem("cart",JSON.stringify(cart));
+ updateCartCount();
+ alert("Added to cart");
+}
+
+function updateCartCount(){
+ document.getElementById("cartCount").innerText =
+   cart.reduce((a,b)=>a+b.qty,0);
+}
+
+function goCheckout(){
+ window.location="checkout.html";
+}
+
+function openDash(){
+ window.location="dashboard.html";
+}
+
+updateCartCount();
+render();
+</script>
+
+</body>
+</html>
